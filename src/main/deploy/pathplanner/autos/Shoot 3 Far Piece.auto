@@ -1,0 +1,91 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 0.6933452953924437,
+      "y": 4.42669621430541
+    },
+    "rotation": -59.170000000000016
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "rampUpSpeaker"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shootNote"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeNote"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Pick up first far note"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot first far note"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "aimSpeaker"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shootNote"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeNote"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Pick up second far note"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot second far note"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "aimSpeaker"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shootNote"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": false
+}
