@@ -108,7 +108,7 @@ public class DrivetrainSubsystem implements Subsystem {
     private final SysIdRoutine steerSysIdRoutine = new SysIdRoutine(
         new SysIdRoutine.Config(),
         new SysIdRoutine.Mechanism(
-            (voltage) -> runSteerVolts(voltage.in(Units.Volts)),
+            (voltage) -> runSteerVolts(voltage.in(Units.VoltageUnit)),
             null,
             this
         )
