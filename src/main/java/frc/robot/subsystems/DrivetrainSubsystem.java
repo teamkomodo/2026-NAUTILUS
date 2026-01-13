@@ -1,7 +1,8 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.util.Units;
+//import edu.wpi.first.units.Measure;
+import  edu.wpi.first.units.measure.*;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -14,6 +15,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+//import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -97,23 +99,23 @@ public class DrivetrainSubsystem implements Subsystem {
      * Forward is x+, Left is y+, counterclockwise is theta+
      */
 
-    private final SysIdRoutine driveSysIdRoutine = new SysIdRoutine(
-        new SysIdRoutine.Config(),
-        new SysIdRoutine.Mechanism(
-            (voltage) -> runDriveVolts(voltage.in(Units.Volts)),
-            null,
-            this
-        )
-    );
+    // private final SysIdRoutine driveSysIdRoutine = new SysIdRoutine(
+    //     new SysIdRoutine.Config(),
+    //     new SysIdRoutine.Mechanism(
+    //         (voltage) -> runDriveVolts(voltage.in()),
+    //         null,
+    //         this
+    //     )
+    // );
 
-    private final SysIdRoutine steerSysIdRoutine = new SysIdRoutine(
-        new SysIdRoutine.Config(),
-        new SysIdRoutine.Mechanism(
-            (voltage) -> runSteerVolts(voltage.in(Units.VoltageUnit)),
-            null,
-            this
-        )
-    );
+    // private final SysIdRoutine steerSysIdRoutine = new SysIdRoutine(
+    //     new SysIdRoutine.Config(),
+    //     new SysIdRoutine.Mechanism(
+    //         (voltage) -> runSteerVolts(voltage.in()),
+    //         null,
+    //         this
+    //     )
+    // );
 
     private final Translation2d frontLeftPosition = new Translation2d(DRIVETRAIN_WIDTH / 2D, DRIVETRAIN_LENGTH / 2D); // All translations are relative to center of rotation
     private final Translation2d frontRightPosition = new Translation2d(DRIVETRAIN_WIDTH / 2D, -DRIVETRAIN_LENGTH / 2D);
@@ -381,31 +383,31 @@ public class DrivetrainSubsystem implements Subsystem {
 
     // sysID
 
-    public Command driveSysIdRoutineCommand(){
-        return Commands.sequence(
-            driveSysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward).withTimeout(7),
-            Commands.waitSeconds(2),
-            driveSysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse).withTimeout(7),
-            Commands.waitSeconds(2),
-            driveSysIdRoutine.dynamic(SysIdRoutine.Direction.kForward).withTimeout(2),
-            Commands.waitSeconds(2),
-            driveSysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse).withTimeout(2),
-            Commands.waitSeconds(2)
-        );
-    }
+    // public Command driveSysIdRoutineCommand(){
+    //     return Commands.sequence(
+    //         driveSysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward).withTimeout(7),
+    //         Commands.waitSeconds(2),
+    //         driveSysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse).withTimeout(7),
+    //         Commands.waitSeconds(2),
+    //         driveSysIdRoutine.dynamic(SysIdRoutine.Direction.kForward).withTimeout(2),
+    //         Commands.waitSeconds(2),
+    //         driveSysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse).withTimeout(2),
+    //         Commands.waitSeconds(2)
+    //     );
+    // }
 
-    public Command steerSysIdRoutineCommand() {
-        return Commands.sequence(
-            steerSysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward).withTimeout(7),
-            Commands.waitSeconds(2),
-            steerSysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse).withTimeout(7),
-            Commands.waitSeconds(2),
-            steerSysIdRoutine.dynamic(SysIdRoutine.Direction.kForward).withTimeout(2),
-            Commands.waitSeconds(2),
-            steerSysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse).withTimeout(2),
-            Commands.waitSeconds(2)
-        );
-    }
+    // public Command steerSysIdRoutineCommand() {
+    //     return Commands.sequence(
+    //         steerSysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward).withTimeout(7),
+    //         Commands.waitSeconds(2),
+    //         steerSysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse).withTimeout(7),
+    //         Commands.waitSeconds(2),
+    //         steerSysIdRoutine.dynamic(SysIdRoutine.Direction.kForward).withTimeout(2),
+    //         Commands.waitSeconds(2),
+    //         steerSysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse).withTimeout(2),
+    //         Commands.waitSeconds(2)
+    //     );
+    // }
 
     public void runDriveVolts(double voltage){
         frontLeft.runForward(voltage);
