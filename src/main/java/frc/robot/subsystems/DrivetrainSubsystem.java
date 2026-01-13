@@ -53,7 +53,8 @@ import java.util.function.DoubleSupplier;
 
 import javax.naming.PartialResultException;
 
-import com.kauailabs.navx.frc.AHRS;
+import com.studica.frc.AHRS;
+import com.studica.frc.AHRS.NavXUpdateRate;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
@@ -133,7 +134,7 @@ public class DrivetrainSubsystem implements Subsystem {
         new PIDController(1, 0, 0),
         new ProfiledPIDController(1, 0, 0, new TrapezoidProfile.Constraints(MAX_ANGULAR_VELOCITY, MAX_ANGULAR_ACCEL)));
     
-    private final AHRS navX = new AHRS(SPI.Port.kMXP, (byte) 200);
+    private final AHRS navX = new AHRS(AHRS.NavXComType.kMXP_SPI, AHRS.NavXUpdateRate.k200Hz);
 
     private boolean slowMode = false;
     private double rotationOffsetRadians = 0.0;
