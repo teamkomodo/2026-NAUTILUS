@@ -5,7 +5,6 @@
 package frc.robot;
 
 import frc.robot.subsystems.DrivetrainSubsystem;
-import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.util.BlinkinPattern;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -30,7 +29,6 @@ public class RobotContainer {
     public final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT); 
     
     private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d);
-    private final LEDSubsystem ledSubsystem = new LEDSubsystem();
 
 
     public RobotContainer() {
@@ -97,7 +95,6 @@ public class RobotContainer {
 
     public void teleopInit() {
         Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();});
-        Commands.runOnce(() -> ledSubsystem.setFramePatternCommand(BlinkinPattern.COLOR_1_AND_2_PATTERN_SPARKLE_COLOR_2_ON_COLOR_1));
     }
 
 
