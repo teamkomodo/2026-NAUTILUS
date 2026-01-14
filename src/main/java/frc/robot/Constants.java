@@ -110,4 +110,9 @@ public final class Constants {
 	public static final double LIMELIGHT_HEIGHT = 0.1778;
 	public static final double LIMELIGHT_ANGLE_OFFSET = 28.3; // degrees
 	public static final double TY_ALIGN_THRESHOLD = -3;
+
+	//Shooter
+	public static final int SHOOTER_MOTOR_1_ID = 2;
+	public static final int SHOOTER_MOTOR_2_ID = 3;
+	public static final int INTAKE_MOTOR_ID = 4;
 }

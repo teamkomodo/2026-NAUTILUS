@@ -5,10 +5,9 @@
 package frc.robot;
 
 import frc.robot.subsystems.DrivetrainSubsystem;
-import frc.robot.util.BlinkinPattern;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.XboxController;
-//import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,10 +15,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import static frc.robot.Constants.*;
-
-import java.lang.ModuleLayer.Controller;
-
-import frc.robot.LimelightHelpers;
 
 
 public class RobotContainer {  
@@ -29,35 +24,14 @@ public class RobotContainer {
     public final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT); 
     
     private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d);
+    private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+    private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
 
 
     public RobotContainer() {
         configureBindings();
         registerNamedCommands();
-        detectAprilTag(driverController);
     } 
-
-    private Command xboxRumbleCommand(CommandXboxController controller, double time) {
-            return Commands.runEnd(() -> {
-                controller.setRumble(RumbleType.kLeftRumble, 1);
-                controller.setRumble(RumbleType.kRightRumble, 1);
-            }, () -> {
-                controller.setRumble(RumbleType.kLeftRumble, 0);
-                controller.setRumble(RumbleType.kRightRumble, 0);
-            }).withTimeout(time);
-    }
-
-
-    private void detectAprilTag(CommandXboxController controller){
-        boolean tv = LimelightHelpers.getTV("limelight");
-
-        if(tv){
-            controller.setRumble(RumbleType.kLeftRumble, 1);
-            System.out.println("RUMBBLEEE");
-        } else {
-            controller.setRumble(RumbleType.kLeftRumble, 0);
-        }
-    }
     
     private void configureBindings() {
 
@@ -72,33 +46,17 @@ public class RobotContainer {
 				() -> driverController.getRightX() // -X (left) on joystick is +Theta (counter-clockwise) on robot
 		));
 
-        Trigger driverLeftTrigger = driverController.leftTrigger();
-        Trigger driverRightTrigger = driverController.rightTrigger();
-        driverLeftTrigger.whileTrue(drivetrainSubsystem.goToBranch(false));
-        driverRightTrigger.whileTrue(drivetrainSubsystem.goToBranch(true));
+        Trigger lefTrigger = driverController.leftTrigger();
+        Trigger rightTrigger = driverController.rightTrigger();
 
-        
-
-        
-
-        Trigger driverYButton = driverController.y();
-        driverYButton.whileTrue(xboxRumbleCommand(driverController, 10));
-
-        Trigger driverXButton = driverController.x();
-        driverXButton.whileTrue(drivetrainSubsystem.limelightAlignCommand());
-
-        
-
-
-
+        lefTrigger.whileTrue(intakeSubsystem.runIntakeCommand());
+        rightTrigger.whileTrue(shooterSubsystem.runShooterCommand());
     }
 
     public void teleopInit() {
         Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();});
     }
 
-
-    
     public Command getAutonomousCommand() {
         return null; //AutoBuilder.followPath(null);
     }
@@ -106,10 +64,4 @@ public class RobotContainer {
     private void registerNamedCommands() {
 
     }
-
-
-
-    
-
-    
 }
