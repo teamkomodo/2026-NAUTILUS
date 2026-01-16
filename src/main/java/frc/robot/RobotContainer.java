@@ -24,7 +24,7 @@ public class RobotContainer {
     public final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT); 
     
     private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d);
-    private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+    //private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
     private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
 
 
@@ -49,8 +49,9 @@ public class RobotContainer {
         Trigger lefTrigger = driverController.leftTrigger();
         Trigger rightTrigger = driverController.rightTrigger();
 
-        lefTrigger.whileTrue(intakeSubsystem.runIntakeCommand());
+        //lefTrigger.whileTrue(intakeSubsystem.runIntakeCommand());
         rightTrigger.whileTrue(shooterSubsystem.runShooterCommand());
+        //rightTrigger.onTrue(Commands.runOnce(() -> intakeSubsystem.updateMotorValues()));
     }
 
     public void teleopInit() {

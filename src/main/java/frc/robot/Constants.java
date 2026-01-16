@@ -113,6 +113,6 @@ public final class Constants {
 
 	//Shooter
 	public static final int SHOOTER_MOTOR_1_ID = 2;
-	public static final int SHOOTER_MOTOR_2_ID = 3;
-	public static final int INTAKE_MOTOR_ID = 4;
+	public static final int SHOOTER_MOTOR_2_ID = 51;
+	public static final int INTAKE_MOTOR_ID = 2;
 }
