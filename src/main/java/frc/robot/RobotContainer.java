@@ -5,7 +5,6 @@
 package frc.robot;
 
 import frc.robot.subsystems.DrivetrainSubsystem;
-import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -20,11 +19,9 @@ import static frc.robot.Constants.*;
 public class RobotContainer {  
     private final Field2d field2d = new Field2d();
 
-    //Inputs Devices
     public final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT); 
     
     private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d);
-    //private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
     private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
 
 
@@ -46,12 +43,10 @@ public class RobotContainer {
 				() -> driverController.getRightX() // -X (left) on joystick is +Theta (counter-clockwise) on robot
 		));
 
-        Trigger lefTrigger = driverController.leftTrigger();
         Trigger rightTrigger = driverController.rightTrigger();
-
-        //lefTrigger.whileTrue(intakeSubsystem.runIntakeCommand());
+        Trigger leftTrigger = driverController.leftTrigger();
         rightTrigger.whileTrue(shooterSubsystem.runShooterCommand());
-        //rightTrigger.onTrue(Commands.runOnce(() -> intakeSubsystem.updateMotorValues()));
+        leftTrigger.onTrue(shooterSubsystem.changeSpeedCommand());
     }
 
     public void teleopInit() {
@@ -59,7 +54,7 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return null; //AutoBuilder.followPath(null);
+        return null;
     }
 
     private void registerNamedCommands() {

@@ -7,6 +7,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -24,6 +25,7 @@ public class ShooterSubsystem extends SubsystemBase {
         // NetworkTable publishers
         private final NetworkTable shooter1Table = NetworkTableInstance.getDefault().getTable("shooter1");
         private final DoublePublisher speedPublisher = shooter1Table.getDoubleTopic("speed").publish();
+        private final DoublePublisher desiredSpeedPublisher = shooter1Table.getDoubleTopic("desiredSpeed").publish();
     
         private final SparkMax shooter1Motor;
         private final SparkMaxConfig shooter1MotorConfig;
@@ -39,12 +41,12 @@ public class ShooterSubsystem extends SubsystemBase {
     
         private final RelativeEncoder shooter2Encoder;
         private final SparkClosedLoopController shooter2Controller;
-        private final PIDGains shooter2PIDGains = new PIDGains(1.0, 0, 0);
 
         private double filteredCurrent = 0;
         private double currentFilterConstant = 0.1;
     
     public ShooterSubsystem() { // CONSTRUCTION
+        
         shooter1Motor = new SparkMax(SHOOTER_MOTOR_1_ID, SparkMax.MotorType.kBrushless);
         shooter1MotorConfig = new SparkMaxConfig();
 
@@ -72,6 +74,7 @@ public class ShooterSubsystem extends SubsystemBase {
     public void periodic() {
         filterCurrent();
         updateTelemetry();
+        setShooterDutyCycle(SmartDashboard.getNumber("desiredSpeed", 0.0));
     }
 
     private void filterCurrent() {
@@ -86,8 +89,9 @@ public class ShooterSubsystem extends SubsystemBase {
     private void configMotors() {
 
         shooter1MotorConfig
-            .inverted(false)
-            .smartCurrentLimit(60);
+            .smartCurrentLimit(80)
+            .idleMode(IdleMode.kCoast)
+            .inverted(true);
 
         shooter1MotorConfig.closedLoop
             .pid(shooter1PIDGains.p, shooter1PIDGains.i, shooter1PIDGains.d);
@@ -96,7 +100,9 @@ public class ShooterSubsystem extends SubsystemBase {
             .configure(shooter1MotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         
         shooter2MotorConfig
-            .inverted(true);
+            .smartCurrentLimit(80)
+            .idleMode(IdleMode.kCoast)
+            .inverted(false);
         
         shooter2MotorConfig.closedLoop
             .pid(shooter1PIDGains.p, shooter1PIDGains.i, shooter1PIDGains.d);
@@ -106,7 +112,6 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setShooterDutyCycle(double dutyCycle) {
-        speed = dutyCycle;
         shooter1Controller.setSetpoint(dutyCycle, ControlType.kDutyCycle);
         shooter2Controller.setSetpoint(dutyCycle, ControlType.kDutyCycle);
     }
@@ -120,11 +125,14 @@ public class ShooterSubsystem extends SubsystemBase {
     }
     
     public void stopShooter() {
-        speed = 0;
         setShooterDutyCycle(speed);
     }
 
     public Command runShooterCommand() {
-        return Commands.runEnd(() -> setShooterDutyCycle(0.2), () -> stopShooter());
+        return Commands.runEnd(() -> setShooterDutyCycle(0.4), () -> stopShooter());
+    }
+
+    public Command changeSpeedCommand() {
+        return Commands.runOnce(() -> setShooterDutyCycle(SmartDashboard.getNumber("speed", 0.1)));
     }
 }
