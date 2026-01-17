@@ -34,7 +34,7 @@ public class RobotContainer {
     public RobotContainer() {
         configureBindings();
         registerNamedCommands();
-        detectAprilTag(driverController);
+        //detectAprilTag(driverController);
     } 
 
     private Command xboxRumbleCommand(CommandXboxController controller, double time) {
@@ -77,20 +77,13 @@ public class RobotContainer {
         driverLeftTrigger.whileTrue(drivetrainSubsystem.goToBranch(false));
         driverRightTrigger.whileTrue(drivetrainSubsystem.goToBranch(true));
 
-        
-
-        
 
         Trigger driverYButton = driverController.y();
-        driverYButton.whileTrue(xboxRumbleCommand(driverController, 10));
+        driverYButton.whileTrue(Commands.runOnce(() -> {System.out.println(drivetrainSubsystem.getShootingLimelightDistance());}));
 
         Trigger driverXButton = driverController.x();
-        driverXButton.whileTrue(drivetrainSubsystem.limelightAlignCommand());
-
+        driverXButton.onTrue(drivetrainSubsystem.toggleLimelightScoringRotationCommand());
         
-
-
-
     }
 
     public void teleopInit() {
