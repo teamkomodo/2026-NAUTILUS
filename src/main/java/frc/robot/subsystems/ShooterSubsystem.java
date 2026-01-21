@@ -10,6 +10,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -25,12 +26,13 @@ public class ShooterSubsystem extends SubsystemBase {
         // NetworkTable publishers
         private final NetworkTable shooter1Table = NetworkTableInstance.getDefault().getTable("shooter1");
         private final DoublePublisher speedPublisher = shooter1Table.getDoubleTopic("speed").publish();
-        private final DoublePublisher desiredSpeedPublisher = shooter1Table.getDoubleTopic("desiredSpeed").publish();
+        private final DoublePublisher rpmPublisher = shooter1Table.getDoubleTopic("rpm").publish();
     
         private final SparkMax shooter1Motor;
         private final SparkMaxConfig shooter1MotorConfig;
 
         private double speed = 0;
+        private double rpm = 0;
     
         private final RelativeEncoder shooter1Encoder;
         private final SparkClosedLoopController shooter1Controller;
@@ -67,14 +69,12 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public void teleopInit() {
         setShooterDutyCycle(0);
-        SmartDashboard.putNumber("speed", speed);
     }
 
     @Override
     public void periodic() {
         filterCurrent();
         updateTelemetry();
-        setShooterDutyCycle(SmartDashboard.getNumber("desiredSpeed", 0.0));
     }
 
     private void filterCurrent() {
@@ -83,6 +83,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
     private void updateTelemetry() {
         speedPublisher.set(speed);
+        rpm = shooter1Encoder.getVelocity();
+        rpmPublisher.set(rpm);
     }
 
     @SuppressWarnings("removal")
@@ -125,14 +127,18 @@ public class ShooterSubsystem extends SubsystemBase {
     }
     
     public void stopShooter() {
-        setShooterDutyCycle(speed);
+        setShooterDutyCycle(0);
     }
 
-    public Command runShooterCommand() {
-        return Commands.runEnd(() -> setShooterDutyCycle(0.4), () -> stopShooter());
+    public Command changeSpeed(double amount) {
+        return Commands.runOnce(() -> {speed += amount; setShooterDutyCycle(speed);});
     }
 
-    public Command changeSpeedCommand() {
-        return Commands.runOnce(() -> setShooterDutyCycle(SmartDashboard.getNumber("speed", 0.1)));
-    }
+    // public Command runShooterCommand() {
+    //     return Commands.runEnd(() -> setShooterDutyCycle(0.4), () -> stopShooter());
+    // }
+
+    // public Command changeSpeedCommand() {
+    //     return Commands.runOnce(() -> setShooterDutyCycle(SmartDashboard.getNumber("speed", 0.1)));
+    // }
 }

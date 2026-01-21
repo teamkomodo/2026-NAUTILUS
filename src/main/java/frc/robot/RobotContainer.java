@@ -45,8 +45,10 @@ public class RobotContainer {
 
         Trigger rightTrigger = driverController.rightTrigger();
         Trigger leftTrigger = driverController.leftTrigger();
-        rightTrigger.whileTrue(shooterSubsystem.runShooterCommand());
-        leftTrigger.onTrue(shooterSubsystem.changeSpeedCommand());
+        rightTrigger.onTrue(shooterSubsystem.changeSpeed(0.01));
+        leftTrigger.onTrue(shooterSubsystem.changeSpeed(-0.01));
+        //rightTrigger.whileTrue(shooterSubsystem.runShooterCommand());
+        //leftTrigger.onTrue(shooterSubsystem.changeSpeedCommand());
     }
 
     public void teleopInit() {
