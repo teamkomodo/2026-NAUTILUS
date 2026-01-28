@@ -35,7 +35,6 @@ public class RobotContainer {
         //drivetrain
 		Trigger leftBumperDriver = driverController.leftBumper();
 		leftBumperDriver.onTrue(Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();}));
-
 		// deadbands are applied in command
 		drivetrainSubsystem.setDefaultCommand(drivetrainSubsystem.joystickDriveCommand(
 				() -> -driverController.getLeftY(), // -Y (up) on joystick is +X (forward) on robot
@@ -45,7 +44,8 @@ public class RobotContainer {
 
         Trigger rightTrigger = driverController.rightTrigger();
         Trigger leftTrigger = driverController.leftTrigger();
-        rightTrigger.onTrue(shooterSubsystem.changeSpeed(0.01));
+        rightTrigger.onTrue(drivetrainSubsystem.PrintPoseEstimationData());
+        //rightTrigger.onTrue(shooterSubsystem.changeSpeed(0.01));
         leftTrigger.onTrue(shooterSubsystem.changeSpeed(-0.01));
         //rightTrigger.whileTrue(shooterSubsystem.runShooterCommand());
         //leftTrigger.onTrue(shooterSubsystem.changeSpeedCommand());
