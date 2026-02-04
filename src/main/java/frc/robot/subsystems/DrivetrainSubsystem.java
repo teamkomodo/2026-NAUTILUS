@@ -56,6 +56,8 @@ import java.util.function.DoubleSupplier;
 
 import javax.naming.PartialResultException;
 
+import org.photonvision.PhotonCamera;
+
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXUpdateRate;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -137,6 +139,8 @@ public class DrivetrainSubsystem implements Subsystem {
     private final SwerveModule frontRight;
     private final SwerveModule backLeft;
     private final SwerveModule backRight;
+
+    private final PhotonCamera = new PhotonCamera("hello");
 
     private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(frontLeftPosition, frontRightPosition,
             backLeftPosition, backRightPosition);
