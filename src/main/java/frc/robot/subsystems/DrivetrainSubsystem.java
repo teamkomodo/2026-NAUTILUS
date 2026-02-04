@@ -682,14 +682,26 @@ public class DrivetrainSubsystem implements Subsystem {
             }
         }
     }
+
     public Command PrintPoseEstimationData() {
         return Commands.runOnce(() -> {
+            LimelightHelpers.PoseEstimate poseEstimate = new LimelightHelpers.PoseEstimate();
+            double[] botPose = LimelightHelpers.getBotPose("limelight");
+            poseEstimate.pose = new Pose2d(new Translation2d(botPose[0] + 8.7736, botPose[1] + 4.0257), new Rotation2d(Math.toRadians(botPose[5])));
             System.out.print("Pos X: ");
-            System.out.print(poseEstimator.getEstimatedPosition().getX());
-            System.out.print(", Pos Y: ");
-            System.out.print(poseEstimator.getEstimatedPosition().getY());
-            System.out.print(", Rotation: ");
-            System.out.println(poseEstimator.getEstimatedPosition().getRotation());
+            System.out.print(poseEstimate.pose.getX());
+            System.out.print("Pos y: ");
+            System.out.print(poseEstimate.pose.getY());
+            System.out.print("Rotation");
+            System.out.println(poseEstimate.pose.getRotation());
+            /*
+             * System.out.print("Pos X: ");
+             * System.out.print(poseEstimator.getEstimatedPosition().getX());
+             * System.out.print(", Pos Y: ");
+             * System.out.print(poseEstimator.getEstimatedPosition().getY());
+             * System.out.print(", Rotation: ");
+             * System.out.println(poseEstimator.getEstimatedPosition().getRotation());
+             */
 
         }, this);
     }
