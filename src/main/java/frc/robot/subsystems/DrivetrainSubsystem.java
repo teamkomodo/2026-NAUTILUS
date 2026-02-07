@@ -147,16 +147,16 @@ public class DrivetrainSubsystem implements Subsystem {
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
         
 
-        // AutoBuilder.configure(
-        //     this::getPose,
-        //     this::resetPose,
-        //     this::getChassisSpeeds,
-        //     this::robotRelativeDrive,
-        //     HOLONOMIC_PATH_FOLLOWER_CONFIG,
-        //     null,
-        //     ON_RED_ALLIANCE,
-        //     this
-        // );
+        AutoBuilder.configure(
+            this::getPose,
+            this::resetPose,
+            this::getChassisSpeeds,
+            this::robotRelativeDrive,
+            HOLONOMIC_PATH_FOLLOWER_CONFIG,
+            null,
+            ON_RED_ALLIANCE,
+            this
+        );
 
         //only tracks specific apriltags depending on alliance
         if(ON_RED_ALLIANCE.getAsBoolean() == false){
@@ -215,18 +215,7 @@ public class DrivetrainSubsystem implements Subsystem {
         // does not need to use adjusted rotation, odometry handles it.
         poseEstimator.update(navX.getRotation2d(), getSwervePositions());
         field.setRobotPose(getPose());
-
-        visionPosePeriodic();
-        
-        detectAprilTag(driverController);
-        //System.out.println(calculateAlignDistance(false));
         updateTelemetry();
-
-        // if(limelightX() == 0){
-        //     System.out.println("AAAAAA");
-        // }
-        
-        
     }
 
 
@@ -422,245 +411,4 @@ public class DrivetrainSubsystem implements Subsystem {
         backLeft.runRotation(voltage);
         backRight.runRotation(voltage);
     }
-
-
-
-    // vision
-
-
-    private void detectAprilTag(CommandXboxController controller){
-        boolean tv = LimelightHelpers.getTV("limelight");
-
-        if(tv){
-            controller.setRumble(RumbleType.kRightRumble, 1);
-            //System.out.println("RUMBBLEEE");
-        } else {
-            controller.setRumble(RumbleType.kRightRumble, 0);
-        }
-    }
-
-    double limelightY(){
-        double yP = .04;
-        double targetingForwardSpeed = LimelightHelpers.getTY("limelight") * yP;
-        //targetingForwardSpeed *= 1;
-        targetingForwardSpeed *= -3;
-        
-        if(Math.abs(LimelightHelpers.getTY("limelight")) > 0.5){
-            return targetingForwardSpeed;
-        }
-        return 0;
-
-    }
-
-
-    // double limelightRot(){
-    //     double aimP = .01;
-    //     double targetingAngularVelocity = LimelightHelpers.getTX("limelight") *aimP;
-    //     targetingAngularVelocity *= 3 * Math.PI;
-    //     targetingAngularVelocity *= 3.5;
-    //     return targetingAngularVelocity;
-    // }
-
-    double limelightX(){
-        double xP = 0.014;
-        double targetingForwardSpeed = LimelightHelpers.getTX("limelight") * xP;
-        targetingForwardSpeed *= 1;
-        targetingForwardSpeed *= -3.5;
-        
-        if(Math.abs(LimelightHelpers.getTX("limelight")) > 0.5){
-            return targetingForwardSpeed;
-        }
-        return 0;
-    }
-
-
-
-    
-
-
-    double limelightZ(){
-        double zP = 0.4;
-        double targetingZ = NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5] *zP;
-        targetingZ *= 0.8;
-        //if(targetingZ = 0)
-        //spin in place
-        
-        //System.out.println(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]);
-        if(Math.abs(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]) > 0.0){
-            return -targetingZ;
-        }
-        return 0;
-        
-    }
-
-
-    public double calculateAlignDistance(boolean right) {
-        double limelightDistance = (APRILTAG_HEIGHT - LIMELIGHT_HEIGHT)
-            / Math.tan(Math.toRadians(LIMELIGHT_ANGLE_OFFSET + LimelightHelpers.getTY("limelight")));
-
-        double branchOffset = limelightDistance
-            / Math.tan(Math.toRadians(90 - LimelightHelpers.getTX("limelight")))
-            + LIMELIGHT_ROBOT_X_OFFSET;
-
-        if(right){
-            branchOffset += APRILTAG_TO_BRANCH_X_DISTANCE;
-        }
-        else {
-            branchOffset -= APRILTAG_TO_BRANCH_X_DISTANCE;
-        }
-
-        
-        return branchOffset;
-    }
-
-    public double calculateAlignTime(boolean right) {
-        double alignDriveTime = Math.pow((Math.abs(calculateAlignDistance(right)) / ROBOT_ALIGNMENT_SPEED * ALIGN_LINEAR_SPEED_FACTOR), ALIGN_EXPONENTIAL_SPEED_FACTOR);
-        return alignDriveTime;
-    }
-
-    public double calculateAlignSpeedDirection(boolean right) {
-        if(right) {
-            if(calculateAlignDistance(true) < 0)
-                return ROBOT_ALIGNMENT_SPEED;
-            else
-                return -ROBOT_ALIGNMENT_SPEED;
-        } else {
-            if(calculateAlignDistance(false) < 0)
-                return ROBOT_ALIGNMENT_SPEED;
-            else
-                return -ROBOT_ALIGNMENT_SPEED;
-        }
-    }
-
-
-
-
-
-    // public void alignToBranch(boolean right) {
-    //     if(LimelightHelpers.getTV("limelight")) {
-    //         double alignDriveTime = Math.abs(calculateAlignTime(right));
-    //         double robotAlignmentSpeed = calculateAlignSpeedDirection(right);
-    //         timedDriveCommand(0, robotAlignmentSpeed, 0, ALIGNMENT_DRIVE, alignDriveTime);
-    //         //doTheThing(robotAlignmentSpeed, alignDriveTime);
-    //         System.out.println("DO SOMETHING");
-            
-    //     }
-    // }
-
-
-
-    public Command goToBranch(boolean right){
-        return Commands.runOnce(() -> {
-            if(LimelightHelpers.getTV("limelight")) {
-                double alignDriveTime = Math.abs(calculateAlignTime(right));
-                double robotAlignmentSpeed = calculateAlignSpeedDirection(right);
-                timedDriveCommand(1.10, robotAlignmentSpeed, 0, ALIGNMENT_DRIVE, alignDriveTime);
-                //doTheThing(robotAlignmentSpeed, alignDriveTime);
-                System.out.println("DO SOMETHING");
-            }
-                        
-                    
-        }, this);
-    }
-
-
-    // public void doTheThing(double robotAlignmentSpeed, double alignDriveTime){
-    //     new SequentialCommandGroup(
-    //         Commands.runOnce(() -> {timedDriveCommand(0, robotAlignmentSpeed, 0, ALIGNMENT_DRIVE, alignDriveTime);}, this),
-    //         Commands.runOnce(() -> {timedDriveCommand(0.3, 0, 0, ALIGNMENT_DRIVE, 0.3);}, this)
-    //     ).schedule();
-    // }
-
-    public void stopAlign () {
-        Commands.run(() -> drive(0, 0, 0, ALIGNMENT_DRIVE), this).schedule();
-    }
-
-    public Command limelightForwardCommand(){
-        return Commands.run(() -> { 
-           if(Math.abs(LimelightHelpers.getTY("limelight")) > 0.01){
-                drive(limelightY(), 0, 0, false);
-  
-            } else {
-                timedDriveCommand(1, 0, 0, false,  0.2);
-            }
-        }, this);  
-    }
-
-
-    public Command limelightCenterCommand(){
-        return Commands.run(() -> {
-
-            
-            drive(0, limelightX(), 0, false);
-        
-            
-        }, this);
-    }
-
-    // public Command limelightPointCommand(){
-    //     return Commands.run(() -> {
-    //         drive(0, 0, limelightRot(), false);
-    //     }, this);
-    // }
-
-
-    // public Command limelightCenterandDriveCommand(){
-    //     return Commands.run(() -> {
-    //         drive(limelightY(), limelightX(), -limelightZ(),  false);
-    //     }, this);
-    // }
-
-
-
-
-    public Command parallelCommand(){        
-        return Commands.run(() -> {
-            
-            drive(0, 0, -limelightZ(), false);
-
-            System.out.println(limelightZ());
-
-            // if(limelightZ() != 0){
-            //     drive(0, 0, -limelightZ(), false);
-            // } else {
-            //     System.out.println("stop it get some help");
-            // }
-                
-        }, this).until(() -> (Math.abs(NetworkTableInstance.getDefault().getTable("limelight").getEntry("targetpose_robotspace").getDoubleArray(new double[6])[5]) < 0.5));
-        
-    }
-
-
-    public Command limelightAlignCommand(){
-       return Commands.run(() -> {
-        drive(limelightY(), limelightX(), limelightZ(),  false);
-       }, this);
-            
-        
-    }
-
-
-    // public Command branchAlignCommand(boolean right){
-    //     return Commands.run(() ->{
-    //             drive(limelightY(), calculateAlignDistance(right), limelightZ(), false);
-    //     }, this);
-
-    // }
-
-
-
-
-   
-
-
-
-    
-
-
-    
-
-
-
-
-
 }
