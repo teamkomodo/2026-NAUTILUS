@@ -9,7 +9,8 @@ import frc.robot.util.BlinkinPattern;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -20,6 +21,8 @@ import static frc.robot.Constants.*;
 public class RobotContainer {  
     private final Field2d field2d = new Field2d();
 
+    private final SendableChooser<Command> autoChooser;
+
     //Inputs Devices
     public final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT); 
     
@@ -29,6 +32,9 @@ public class RobotContainer {
     public RobotContainer() {
         configureBindings();
         registerNamedCommands();
+
+        autoChooser = AutoBuilder.buildAutoChooser();
+        SmartDashboard.putData("Auto Chooser", autoChooser);
     } 
 
     private Command xboxRumbleCommand(CommandXboxController controller, double time) {
@@ -60,7 +66,9 @@ public class RobotContainer {
     }
     
     public Command getAutonomousCommand() {
-        return AutoBuilder.followPath(null);
+        // if(autoChooser != null){
+        //     return autoChooser.getSelected();}
+        return null;
     }
 
     private void registerNamedCommands() {

@@ -1,8 +1,6 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.MathUtil;
-//import edu.wpi.first.units.Measure;
-import  edu.wpi.first.units.measure.*;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -15,57 +13,33 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-//import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.DoubleArraySubscriber;
-import edu.wpi.first.networktables.DoubleEntry;
-import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Counter;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.util.FalconSwerveModule;
 import frc.robot.util.SwerveModule;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
 import static frc.robot.Constants.*;
 
-import java.time.Period;
-import java.util.Optional;
+import java.io.IOException;
 import java.util.function.DoubleSupplier;
 
-import javax.naming.PartialResultException;
+import org.json.simple.parser.ParseException;
 
 import com.studica.frc.AHRS;
-import com.studica.frc.AHRS.NavXUpdateRate;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.util.DriveFeedforwards;
-import com.revrobotics.spark.SparkLowLevel.PeriodicFrame;
-
 import frc.robot.LimelightHelpers;
-import frc.robot.RobotContainer;
 
 public class DrivetrainSubsystem implements Subsystem {
 
@@ -141,22 +115,27 @@ public class DrivetrainSubsystem implements Subsystem {
     private boolean slowMode = false;
     private double rotationOffsetRadians = 0.0;
 
+    private RobotConfig config;
+
     public DrivetrainSubsystem(Field2d field) {
+        setupPathPlanner();
         this.field = field;
 
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
         
+        // config = RobotConfig.fromGUISettings();
+        
 
-        AutoBuilder.configure(
-            this::getPose,
-            this::resetPose,
-            this::getChassisSpeeds,
-            this::robotRelativeDrive,
-            HOLONOMIC_PATH_FOLLOWER_CONFIG,
-            null,
-            ON_RED_ALLIANCE,
-            this
-        );
+        // AutoBuilder.configure(
+        //     this::getPose,
+        //     this::resetPose,
+        //     this::getChassisSpeeds,
+        //     this::robotRelativeDrive,
+        //     HOLONOMIC_PATH_FOLLOWER_CONFIG,
+        //     config,
+        //     ON_RED_ALLIANCE,
+        //     this
+        // );
 
         //only tracks specific apriltags depending on alliance
         if(ON_RED_ALLIANCE.getAsBoolean() == false){
@@ -207,9 +186,6 @@ public class DrivetrainSubsystem implements Subsystem {
             new Pose2d());
     }
 
-
-    
-
     @Override
     public void periodic() {
         // does not need to use adjusted rotation, odometry handles it.
@@ -217,9 +193,6 @@ public class DrivetrainSubsystem implements Subsystem {
         field.setRobotPose(getPose());
         updateTelemetry();
     }
-
-
-    
 
     private void updateTelemetry() {
         // Swerve
@@ -246,9 +219,6 @@ public class DrivetrainSubsystem implements Subsystem {
 
         robotPosePublisher.set(getPose());
     }
-
-    private void visionPosePeriodic() {}
-
     public void robotRelativeDrive(ChassisSpeeds chassisSpeeds, DriveFeedforwards driveFeedforwards) {
         drive(chassisSpeeds, false);
     }
@@ -292,8 +262,25 @@ public class DrivetrainSubsystem implements Subsystem {
         resetPose(new Pose2d(getPose().getTranslation(), Rotation2d.fromDegrees(0)));
     }
 
-    // Getters
+    private void setupPathPlanner(){
+        try {
+            config = RobotConfig.fromGUISettings();
+            AutoBuilder.configure(
+                this::getPose,
+                this::resetPose,
+                this::getChassisSpeeds,
+                this::robotRelativeDrive,
+                HOLONOMIC_PATH_FOLLOWER_CONFIG,
+                config,
+                ON_RED_ALLIANCE,
+                this
+             );
+        } catch (Exception e){
+            e.printStackTrace();
+        } 
+    }
 
+    // Getters
     public SwerveModulePosition[] getSwervePositions() {
         return new SwerveModulePosition[] {
             frontLeft.getPosition(),
