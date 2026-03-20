@@ -5,6 +5,7 @@
 package frc.robot;
 
 import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.PoseEstimationSubsystem;
 import frc.robot.util.BlinkinPattern;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -29,6 +30,8 @@ public class RobotContainer {
     public final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT); 
     
     private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d);
+
+    private final PoseEstimationSubsystem poseEstimationSubsystem = new PoseEstimationSubsystem(drivetrainSubsystem);
 
 
     public RobotContainer() {
@@ -63,6 +66,7 @@ public class RobotContainer {
 
         //drivetrain
 		Trigger leftBumperDriver = driverController.leftBumper();
+        Trigger driverB = driverController.b();
 		leftBumperDriver.onTrue(Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();}));
 
 		// deadbands are applied in command
@@ -74,15 +78,16 @@ public class RobotContainer {
 
         Trigger driverLeftTrigger = driverController.leftTrigger();
         Trigger driverRightTrigger = driverController.rightTrigger();
-        driverLeftTrigger.whileTrue(drivetrainSubsystem.goToBranch(false));
-        driverRightTrigger.whileTrue(drivetrainSubsystem.goToBranch(true));
+        driverLeftTrigger.onTrue(poseEstimationSubsystem.printVisionPoseEstimation());
+            driverB.onTrue(drivetrainSubsystem.toggleAutoAlignCommand());
+        // driverRightTrigger.whileTrue();
 
 
         Trigger driverYButton = driverController.y();
-        driverYButton.whileTrue(Commands.runOnce(() -> {System.out.println(drivetrainSubsystem.getShootingLimelightDistance());}));
+        // driverYButton.whileTrue(Commands.runOnce(() -> {System.out.println(drivetrainSubsystem.getShootingLimelightDistance());}));
 
         Trigger driverXButton = driverController.x();
-        driverXButton.onTrue(drivetrainSubsystem.toggleLimelightScoringRotationCommand());
+        // driverXButton.onTrue(drivetrainSubsystem.toggleLimelightScoringRotationCommand());
         
     }
 
