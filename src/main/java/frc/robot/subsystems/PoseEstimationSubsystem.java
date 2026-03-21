@@ -14,10 +14,12 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -25,6 +27,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import org.photonvision.*;
 
 public class PoseEstimationSubsystem extends SubsystemBase {
+
     public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout
             .loadField(AprilTagFields.k2026RebuiltWelded);
     public static final Transform3d kRobotToCam = new Transform3d(
@@ -81,7 +84,7 @@ public class PoseEstimationSubsystem extends SubsystemBase {
         var pose = getVisionPose();
         pose.ifPresent(est -> {
             Pose2d incomingVisionPose = est.estimatedPose.toPose2d();
-            Pose2d currentPose = drivetrainSubsystem.getPoseEstimation();
+            Pose2d currentPose = drivetrainSubsystem.getPose();
 
             double error = incomingVisionPose.getTranslation().getDistance(currentPose.getTranslation());
 
@@ -92,7 +95,7 @@ public class PoseEstimationSubsystem extends SubsystemBase {
                 // for this
                 drivetrainSubsystem.addVisionMeasurement(
                         incomingVisionPose,
-                        est.timestampSeconds, VecBuilder.fill(0.2, 0.2, 30 * Math.PI / 180)); // TODO: Add
+                        est.timestampSeconds, drivetrainSubsystem.visionDefaultStandardDevs); // TODO: Add
                                                                                               // VisionStdDevs
                                                                                               // to improve pose
                                                                                               // estimation by a
@@ -121,7 +124,7 @@ public class PoseEstimationSubsystem extends SubsystemBase {
 
     public Command printDrivetrainPoseEstimation() {
         return Commands.runOnce(() -> {
-            Pose2d drivetrainPoseEstimation = drivetrainSubsystem.getPoseEstimation();
+            Pose2d drivetrainPoseEstimation = drivetrainSubsystem.getPose();
             System.out.print("========Pose: X: ");
             System.out.print(drivetrainPoseEstimation.getX());
             System.out.print(", Y: ");
@@ -140,7 +143,7 @@ public class PoseEstimationSubsystem extends SubsystemBase {
         } else { // Blue alliance
             hubPosMeters = new Translation2d(16.540 - 4.6255, 4.0345); // Red hub position, assumes red outpost corner as (0m, 0m)
         }
-        return drivetrainSubsystem.getPoseEstimation().getTranslation().getDistance(hubPosMeters);
+        return drivetrainSubsystem.getPose().getTranslation().getDistance(hubPosMeters);
     }
 
 }

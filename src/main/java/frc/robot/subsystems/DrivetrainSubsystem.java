@@ -72,11 +72,13 @@ import frc.robot.LimelightHelpers;
 import frc.robot.RobotContainer;
 
 public class DrivetrainSubsystem implements Subsystem {
+    public final Matrix<N3, N1> visionDefaultStandardDevs = VecBuilder.fill(0.5, 0.5, Math.toDegrees(90));
     Counter counter = new Counter(Counter.Mode.kPulseLength);
     private boolean useAutoAlign = false;
     public static final NetworkTable drivetrainNT = NetworkTableInstance.getDefault().getTable("drivetrain");
 
     public final CommandXboxController driverController = new CommandXboxController(DRIVER_XBOX_PORT);
+    private final PIDController rotationController = new PIDController(10, 0.0, 0.1);
 
     // Telemetry
     private final StructArrayPublisher<SwerveModuleState> measuredSwerveStatesPublisher = drivetrainNT
@@ -155,7 +157,7 @@ public class DrivetrainSubsystem implements Subsystem {
     private final AHRS navX = new AHRS(AHRS.NavXComType.kMXP_SPI, AHRS.NavXUpdateRate.k200Hz);
 
     private boolean slowMode = false;
-    private double rotationOffsetRadians = 0.0;
+    private double rotationOffsetRadians = 0;
 
     private double xVelocity = 0.0;
     private double yVelocity = 0.0;
@@ -163,7 +165,8 @@ public class DrivetrainSubsystem implements Subsystem {
 
     public DrivetrainSubsystem(Field2d field) {
         this.field = field;
-
+        rotationController.enableContinuousInput(-Math.PI, Math.PI);
+        rotationController.setTolerance(Math.toRadians(0.01));
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
 
         // AutoBuilder.configure(
@@ -209,7 +212,7 @@ public class DrivetrainSubsystem implements Subsystem {
 
         poseEstimator = new SwerveDrivePoseEstimator(
                 kinematics,
-                getGyroRotation(),
+                getAdjustedRotation(),
                 new SwerveModulePosition[] {
                         frontLeft.getPosition(),
                         frontRight.getPosition(),
@@ -217,8 +220,9 @@ public class DrivetrainSubsystem implements Subsystem {
                         backRight.getPosition()
                 },
                 new Pose2d(),
-                VecBuilder.fill(0.2, 0.2, Math.toRadians(10)),
-                VecBuilder.fill(0.2, 0.2, Math.toRadians(30)));
+                VecBuilder.fill(0.2, 0.2, Math.toRadians(70)),
+                visionDefaultStandardDevs); // TODO: Add
+
     }
 
     public Command toggleAutoAlignCommand() {
@@ -231,26 +235,24 @@ public class DrivetrainSubsystem implements Subsystem {
     @Override
     public void periodic() {
         // does not need to use adjusted rotation, odometry handles it.
-        poseEstimator.update(navX.getRotation2d(), getSwervePositions());
+        poseEstimator.update(getAdjustedRotation(), getSwervePositions());
         field.setRobotPose(getPose());
 
-        visionPosePeriodic();
         updateTelemetry();
         if (useAutoAlign) {
             Rotation2d targetAngle = getRotationToHub();
-            double targetOmega = 3*(getGyroRotation().getRadians() - targetAngle.getRadians());
-            drive(xVelocity, yVelocity, targetOmega, FIELD_RELATIVE_DRIVE);
+            double targetOmega = MathUtil.clamp(rotationController.calculate(
+                    navX.getRotation2d().getRadians(),
+                    targetAngle.getRadians()), -MAX_ANGULAR_VELOCITY, MAX_ANGULAR_VELOCITY);
+            if (rotationController.atSetpoint()) {
+                targetOmega = 0;
+            }
+            System.out.println("OMEGA: " + targetOmega + ", ANGLE: " + targetAngle.getDegrees() + " degrees.");
+            drive(xVelocity, yVelocity, -targetOmega, true);
         } else {
             drive(xVelocity, yVelocity, angularVelocity, FIELD_RELATIVE_DRIVE);
-        }
-    }
 
-    /**
-     * @return a rotation2d object representing the robot's current heading, with 0
-     *         degrees being the direction the robot was facing at startup
-     */
-    public Rotation2d getGyroRotation() {
-        return navX.getRotation2d().plus(Rotation2d.fromRadians(Math.PI));
+        }
     }
 
     /**
@@ -261,13 +263,14 @@ public class DrivetrainSubsystem implements Subsystem {
      */
     public Rotation2d getRotationToHub() {
         Translation2d hubPosMeters;
-        if (ON_RED_ALLIANCE.getAsBoolean()) {
-            hubPosMeters = new Translation2d(4.6255, 4.0345 ); // Red hub position, assumes red outpost corner as (0m, 0m)
+        if (ON_RED_ALLIANCE.getAsBoolean()) { // Red Alliance
+            hubPosMeters = new Translation2d(16.540 - 4.6255, 4.0345);
+
         } else { // Blue alliance
-            hubPosMeters = new Translation2d(16.540 - 4.6255, 4.0345); // Red hub position, assumes red outpost corner as (0m, 0m)
+            hubPosMeters = new Translation2d(4.6255, 4.0345);
         }
         return hubPosMeters
-                .minus(getPoseEstimation().getTranslation())
+                .minus(getPose().getTranslation())
                 .getAngle();
     }
 
@@ -295,9 +298,6 @@ public class DrivetrainSubsystem implements Subsystem {
         backRight.updateTelemetry();
 
         robotPosePublisher.set(getPose());
-    }
-
-    private void visionPosePeriodic() {
     }
 
     public void robotRelativeDrive(ChassisSpeeds chassisSpeeds, DriveFeedforwards driveFeedforwards) {
@@ -339,8 +339,8 @@ public class DrivetrainSubsystem implements Subsystem {
     }
 
     public void zeroGyro() {
-        rotationOffsetRadians = -navX.getRotation2d().getRadians() + Math.PI;
-        resetPose(new Pose2d(getPose().getTranslation(), Rotation2d.fromDegrees(0)));
+        rotationOffsetRadians = -navX.getRotation2d().getRadians();
+        resetPose(new Pose2d(getPose().getTranslation(), new Rotation2d()));
     }
 
     // Getters
@@ -465,10 +465,6 @@ public class DrivetrainSubsystem implements Subsystem {
         frontRight.runRotation(voltage);
         backLeft.runRotation(voltage);
         backRight.runRotation(voltage);
-    }
-
-    public Pose2d getPoseEstimation() {
-        return poseEstimator.getEstimatedPosition();
     }
 
     public void addVisionMeasurement(

@@ -78,7 +78,7 @@ public class RobotContainer {
 
         Trigger driverLeftTrigger = driverController.leftTrigger();
         Trigger driverRightTrigger = driverController.rightTrigger();
-        driverLeftTrigger.onTrue(poseEstimationSubsystem.printVisionPoseEstimation());
+        driverLeftTrigger.onTrue(poseEstimationSubsystem.printDrivetrainPoseEstimation());
             driverB.onTrue(drivetrainSubsystem.toggleAutoAlignCommand());
         // driverRightTrigger.whileTrue();
 
